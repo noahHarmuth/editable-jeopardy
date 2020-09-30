@@ -189,7 +189,7 @@ class Mainasd extends React.Component {
                                 <QCol c={5} showQ={this.showQ} category={this.state.categories[5]} questions={this.state.questions[5]} answers={this.state.answers[5]} points={this.state.points[5]}></QCol>
                             </Row>
                             <Row sm={12}><p>change question  :  row:</p><input id="row" name="row" value={this.state.row} onChange={this.handleChange.bind(this)}></input>
-        column:<input id="column" name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
+        casdolumn:<input id="column" name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
         question:<input id="q" name="q" value={this.state.q} onChange={this.handleChange.bind(this)}></input>
         answer:<input id="a" name="a" value={this.state.a} onChange={this.handleChange.bind(this)}></input>
                                 <Button onClick={this._onPress.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
