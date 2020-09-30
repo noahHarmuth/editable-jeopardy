@@ -1,6 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import { Container, Col, Row, Button } from 'react-bootstrap';
 import QCol from './components/qCol';
