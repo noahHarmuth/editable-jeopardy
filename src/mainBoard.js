@@ -12,11 +12,14 @@ class Mainasd extends React.Component {
         this.showQ.bind(this);
         this.hideQ.bind(this);
         this._onPress = this._onPress.bind(this);
+        this.addPoints = this.addPoints.bind(this);
         this.state = {
             column: 0,
             row: 0,
             q: "",
             cat: "",
+            t1: 0,
+            t2: 0,
             categories: {
                 1: "Suff",
                 2: "thing",
@@ -267,6 +270,12 @@ class Mainasd extends React.Component {
     hideQ = () => {
         this.setState({ text: "", isSingle: false });
     }
+    addPoints = () => {
+        let x = this.state.t1;
+        x = x + 100
+        this.setState({ t1: x })
+        console.log(this.state.t1)
+    }
     render() {
         return (
             <div className="App">
@@ -276,13 +285,29 @@ class Mainasd extends React.Component {
                         :
 
                         <Container fluid>
-                            <Row style={{ borderWidth: 2 }}>
+                            <Row sm={12} style={{ borderWidth: 2 }}>
                                 <QCol c={1} showQ={this.showQ} category={this.state.categories[1]} questions={this.state.questions[1]} answers={this.state.answers[1]} points={this.state.points[1]}></QCol>
                                 <QCol c={2} showQ={this.showQ} category={this.state.categories[2]} questions={this.state.questions[2]} answers={this.state.answers[2]} points={this.state.points[2]}></QCol>
                                 <QCol c={3} showQ={this.showQ} category={this.state.categories[3]} questions={this.state.questions[3]} answers={this.state.answers[3]} points={this.state.points[3]}></QCol>
                                 <QCol c={4} showQ={this.showQ} category={this.state.categories[4]} questions={this.state.questions[4]} answers={this.state.answers[4]} points={this.state.points[4]}></QCol>
                                 <QCol c={5} showQ={this.showQ} category={this.state.categories[5]} questions={this.state.questions[5]} answers={this.state.answers[5]} points={this.state.points[5]}></QCol>
+                                <Col sm={2}>
+                                    <h1>Team 1</h1>
+                                    <h3>{this.state.t1}</h3>
+                                    <Row className="justify-content-center">
+                                        <Button onClick={() => { let x = this.state.t1; this.setState({ t1: x - 100 }) }} className="btn btn-danger pad1">Subtract</Button>
+                                        <Button onClick={() => { let x = this.state.t1; this.setState({ t1: x + 100 }) }} className="btn btn-success pad1">Add Points</Button>
+                                    </Row>
+                                    <h1>Team 2</h1>
+                                    <h3>{this.state.t2}</h3>
+                                    <Row className="justify-content-center">
+                                        <Button onClick={() => { let x = this.state.t2; this.setState({ t2: x - 100 }) }} className="btn btn-danger pad1">Subtract</Button>
+                                        <Button onClick={() => { let x = this.state.t2; this.setState({ t2: x + 100 }) }} className="btn btn-success pad1">Add Points</Button>
+                                    </Row>
+                                    <Button style={{marginTop: 90}} className="btn btn-warning">Final Jeopardy</Button>
+                                </Col>
                             </Row>
+
                             <Row sm={12}><p>change question  :  row:</p><input id="row" name="row" value={this.state.row} onChange={this.handleChange.bind(this)}></input>
         column:<input id="column" name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
         question:<input id="q" name="q" value={this.state.q} onChange={this.handleChange.bind(this)}></input>

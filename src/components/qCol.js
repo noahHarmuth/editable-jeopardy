@@ -18,7 +18,7 @@ class QCol extends React.Component {
     render() {
         return (
 
-            <Col >
+            <Col sm={2} >
                 <Row style={styles["category"]} className='text-center justify-content-center border border-black'>{this.props.category}</Row>
                 <Row onClick={() => this.props.showQ(this.props.questions[1],this.props.answers[1],1,this.props.c)} style={styles["question"]} className='text-center justify-content-center border border-black'>{this.props.points[1]}</Row>
                 <Row onClick={() => this.props.showQ(this.props.questions[2],this.props.answers[2],2,this.props.c)} style={styles["question"]} className='text-center justify-content-center border border-black'>{this.props.points[2]}</Row>
