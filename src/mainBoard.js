@@ -4,12 +4,14 @@ import './App.css';
 import { Container, Col, Row, Button } from 'react-bootstrap';
 import QCol from './components/qCol';
 import Qa from './qAScreen';
+const axios = require('axios');
 class Mainasd extends React.Component {
 
     constructor(props) {
         super(props);
         this.showQ.bind(this);
         this.hideQ.bind(this);
+        this._onPress = this._onPress.bind(this);
         this.state = {
             column: 0,
             row: 0,
@@ -141,20 +143,51 @@ class Mainasd extends React.Component {
             a: "",
         }
     };
+
     handleChange({ target }) {
         this.setState({
             [target.name]: target.value
         });
     }
-    _onPress = () => {
-        let qs = this.state.questions;
-        let aS = this.state.answers;
-        console.log(qs);
-        aS[this.state.column][this.state.row] = this.state.a;
-        qs[this.state.column][this.state.row] = this.state.q;
-        this.setState({ answers: aS, questions: qs });
-        //this.setState({isFilled: !this.state.isFilled});
-        console.log();
+    _onPress = async () => {
+        axios.get('/questions')
+            .then((response) => {
+                // handle success
+                //console.log(response);
+                if(this.state.column === 0 || this.state.row === 0){
+                    console.log(response.data);
+                    this.setState({questions : response.data});
+                }else {
+                    let qs = response.data;
+                    qs[this.state.column][this.state.row] = this.state.q;
+                    this.setState({ questions: qs });
+                    axios.post('/questions', {
+                        questions: this.state.questions
+                      })
+                      .then((response) => {
+                        console.log(response);
+                      })
+                      .catch((error) => {
+                        console.log(error);
+                      });
+                }
+                
+            })
+            .catch((error) => {
+                // handle error
+                console.log(error);
+            })
+            .then(() => {
+                // always executed
+            });
+        // let qs = this.state.questions;
+        // let aS = this.state.answers;
+        // console.log(qs);
+        // aS[this.state.column][this.state.row] = this.state.a;
+        // qs[this.state.column][this.state.row] = this.state.q;
+        // this.setState({ answers: aS, questions: qs });
+        // //this.setState({isFilled: !this.state.isFilled});
+        // console.log();
     }
     changeCat = () => {
         let qs = this.state.categories;
@@ -192,7 +225,7 @@ class Mainasd extends React.Component {
         column:<input id="column" name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
         question:<input id="q" name="q" value={this.state.q} onChange={this.handleChange.bind(this)}></input>
         answer:<input id="a" name="a" value={this.state.a} onChange={this.handleChange.bind(this)}></input>
-                                <Button onClick={this._onPress.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
+                                <Button onClick={this._onPress} className={'btn btn-primary'}>Send</Button></Row>
                             <Row sm={12}><p>change category: </p>
         column:<input name="column" id="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
         category:<input name="cat" value={this.state.cat} onChange={this.handleChange.bind(this)}></input>
