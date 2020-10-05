@@ -154,24 +154,55 @@ class Mainasd extends React.Component {
             .then((response) => {
                 // handle success
                 //console.log(response);
-                if(this.state.column === 0 || this.state.row === 0){
+                if (this.state.column === 0 || this.state.row === 0) {
                     console.log(response.data);
-                    this.setState({questions : response.data});
-                }else {
+                    this.setState({ questions: response.data });
+                } else {
                     let qs = response.data;
                     qs[this.state.column][this.state.row] = this.state.q;
                     this.setState({ questions: qs });
                     axios.post('/questions', {
                         questions: this.state.questions
-                      })
-                      .then((response) => {
-                        console.log(response);
-                      })
-                      .catch((error) => {
-                        console.log(error);
-                      });
+                    })
+                        .then((response) => {
+                            console.log(response);
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
                 }
-                
+
+            })
+            .catch((error) => {
+                // handle error
+                console.log(error);
+            })
+            .then(() => {
+                // always executed
+            });
+        //handle answer updats
+        axios.get('/answers')
+            .then((response) => {
+                // handle success
+                //console.log(response);
+                if (this.state.column === 0 || this.state.row === 0) {
+                    console.log(response.data);
+                    this.setState({ answers: response.data });
+                } else {
+                    let aq = response.data;
+                    aq[this.state.column][this.state.row] = this.state.a;
+                    this.setState({ answers: aq });
+                    axios.post('/answers', {
+                        answers: this.state.answers
+                    })
+                        .then((response) => {
+                            console.log(response);
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                }
+
             })
             .catch((error) => {
                 // handle error
@@ -190,11 +221,42 @@ class Mainasd extends React.Component {
         // console.log();
     }
     changeCat = () => {
-        let qs = this.state.categories;
-        qs[this.state.column] = this.state.cat;
-        this.setState({
-            categories: qs,
-        })
+        axios.get('/categories')
+            .then((response) => {
+                // handle success
+                //console.log(response);
+                if (this.state.column === 0) {
+                    console.log(response.data);
+                    this.setState({ categories: response.data });
+                } else {
+                    let aq = response.data;
+                    aq[this.state.column] = this.state.cat;
+                    this.setState({ categories: aq });
+                    axios.post('/categories', {
+                        categories: this.state.categories
+                    })
+                        .then((response) => {
+                            console.log(response);
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                }
+
+            })
+            .catch((error) => {
+                // handle error
+                console.log(error);
+            })
+            .then(() => {
+                // always executed
+            });
+
+        // let qs = this.state.categories;
+        // qs[this.state.column] = this.state.cat;
+        // this.setState({
+        //     categories: qs,
+        // })
     }
     showQ = (blah, beck, r, c) => {
         let qs = this.state.points;
