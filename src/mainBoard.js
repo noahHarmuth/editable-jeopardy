@@ -3,20 +3,32 @@ import * as firebase from "firebase/app";
 import "firebase/database"
 import React from 'react';
 import './App.css';
-import { Container, Col, Row, Button } from 'react-bootstrap';
+import { Container, Col, Row, Button, Dropdown, DropdownButton } from 'react-bootstrap';
 import QCol from './components/qCol';
 import Qa from './qAScreen';
 import FinalJ from './finalJ'
 const axios = require('axios');
 
+// LIVE DB
+// var firebaseConfig = {
+//     apiKey: "AIzaSyDZRTy4sdtarEGiJpVkuB4SyZB6YWg8NwY",
+//     authDomain: "thursday-jeopardy.firebaseapp.com",
+//     databaseURL: "https://thursday-jeopardy.firebaseio.com",
+//     projectId: "thursday-jeopardy",
+//     storageBucket: "thursday-jeopardy.appspot.com",
+//     messagingSenderId: "1095829091044",
+//     appId: "1:1095829091044:web:f1aed06c5db5bd371fb2f1"
+// };
+
+// TEST DB
 var firebaseConfig = {
-    apiKey: "AIzaSyDZRTy4sdtarEGiJpVkuB4SyZB6YWg8NwY",
-    authDomain: "thursday-jeopardy.firebaseapp.com",
-    databaseURL: "https://thursday-jeopardy.firebaseio.com",
-    projectId: "thursday-jeopardy",
-    storageBucket: "thursday-jeopardy.appspot.com",
-    messagingSenderId: "1095829091044",
-    appId: "1:1095829091044:web:f1aed06c5db5bd371fb2f1"
+    apiKey: "AIzaSyCz08B5rqn852s_s86MCdNrhrFxJEXkDUk",
+    authDomain: "dev-thursday-jeopardy.firebaseapp.com",
+    databaseURL: "https://dev-thursday-jeopardy.firebaseio.com",
+    projectId: "dev-thursday-jeopardy",
+    storageBucket: "dev-thursday-jeopardy.appspot.com",
+    messagingSenderId: "290690740567",
+    appId: "1:290690740567:web:81e3c003c235acf515ce12"
 };
 // Initialize Firebase
 
@@ -26,15 +38,26 @@ class Mainasd extends React.Component {
         super(props);
         this.showQ.bind(this);
         this.hideQ.bind(this);
-        this._onPress = this._onPress.bind(this);
         this.addPoints = this.addPoints.bind(this);
-        this.updateBoard = this.updateBoard.bind(this);
+        this.updateDropdown = this.updateDropdown.bind(this);
+        this.loadFinal = this.loadFinal.bind(this);
         firebase.initializeApp(firebaseConfig);
         this.state = {
+            addCategory: "",
             column: 0,
-            row: 0,
             q: "",
             cat: "",
+            q1: "",
+            q2: "",
+            q3: "",
+            q4: "",
+            q5: "",
+            a1: "",
+            a2: "",
+            a3: "",
+            a4: "",
+            a5: "",
+            dropList: [],
             t1: 0,
             t2: 0,
             categories: {
@@ -173,57 +196,61 @@ class Mainasd extends React.Component {
         }
     };
     componentDidMount = () => {
-        this.updateBoard();
+        this.updateDropdown();
+        this.loadFinal();
     }
-
     handleChange({ target }) {
         this.setState({
             [target.name]: target.value
         });
     }
-    _onPress = async () => {
-        let qs = this.state.questions;
-        qs[this.state.column][this.state.row] = this.state.q;
-        this.setState({ questions: qs });
-        firebase.database().ref("questions").set({
-            questions: this.state.questions
-        })
-        let aq = this.state.answers;
-        aq[this.state.column][this.state.row] = this.state.a;
-        this.setState({ answers: aq });
-        firebase.database().ref("answers").set({
-            answers: this.state.answers
-        })
-    }
-    changeCat = () => {
-        let aq = this.state.categories;
-        aq[this.state.column] = this.state.cat;
-        this.setState({ categories: aq });
-        firebase.database().ref("categories").set({
-            categories: this.state.categories
+    loadFinal = () => {
+        let ref = firebase.database().ref("/finalJeopardy/");
+        ref.on("value", snapshot => {
+            if (snapshot.val() != null) {
+                console.log(snapshot.val());
+                this.setState({ finalJeopardy: snapshot.val() })
+            }
         })
     }
     changeFinal = () => {
         let aq = this.state.finalJeopardy;
-
         aq.question = this.state.finalQ;
         aq.answer = this.state.finalA;
         aq.category = this.state.finalC;
         this.setState({ finalJeopardy: aq });
-        firebase.database().ref("finalJeopardy").set({
-            finalJeopardy: this.state.finalJeopardy
+        firebase.database().ref("/finalJeopardy").set({
+            answer: this.state.finalJeopardy.answer,
+            category: this.state.finalJeopardy.category,
+            question: this.state.finalJeopardy.question
         })
     }
-    updateBoard = () => {
-        let ref = firebase.database().ref("/");
+    updateDropdown = () => {
+        let ref = firebase.database().ref("/categories/");
+        let tempList = [];
         ref.on("value", snapshot => {
-            console.log(snapshot.val())
-            console.log(snapshot.val().questions.questions)
-            this.setState({ questions: snapshot.val().questions.questions, answers: snapshot.val().answers.answers, categories: snapshot.val().categories.categories, finalJeopardy: snapshot.val().finalJeopardy.finalJeopardy })
-        });
-
+            for (const key in snapshot.val()) {
+                console.log(key.toString())
+                tempList.push(<option value={key.toString()} name={key.toString()}>{key.toString()}</option>);
+            }
+            this.setState({ dropList: tempList })
+        })
     }
-
+    updateCategory = () => {
+        let ref = firebase.database().ref("/categories/" + this.state.addCategory);
+        ref.once("value", snapshot => {
+            console.log(this.state.addCategory)
+            console.log(snapshot.val().questions.toString())
+            console.log(snapshot.val().answers.toString())
+            let tempQ = this.state.questions;
+            let tempA = this.state.answers;
+            let tempCat = this.state.categories;
+            tempCat[this.state.column] = this.state.addCategory
+            tempQ[this.state.column] = snapshot.val().questions;
+            tempA[this.state.column] = snapshot.val().answers;
+            this.setState({ questions: tempQ, answers: tempA, categories: tempCat })
+        });
+    }
     showQ = (blah, beck, r, c) => {
         let qs = this.state.points;
         qs[c][r] = "";
@@ -242,6 +269,25 @@ class Mainasd extends React.Component {
         this.setState({ t1: x })
         console.log(this.state.t1)
     }
+    addCatToDB = () => {
+        firebase.database().ref("categories/" + this.state.cat).set({
+            questions: {
+                1: this.state.q1,
+                2: this.state.q2,
+                3: this.state.q3,
+                4: this.state.q4,
+                5: this.state.q5
+            },
+            answers: {
+                1: this.state.a1,
+                2: this.state.a2,
+                3: this.state.a3,
+                4: this.state.a4,
+                5: this.state.a5
+            }
+        })
+        this.updateDropdown();
+    }
     render() {
         return (
             <div className="App">
@@ -252,9 +298,7 @@ class Mainasd extends React.Component {
                         :
                         this.state.isSingle ?
                             <Qa hideQ={this.hideQ} qText={this.state.text} aText={this.state.aText}></Qa>
-
                             :
-
                             <Container fluid>
                                 <Row sm={12} style={{ borderWidth: 2 }}>
                                     <QCol c={1} showQ={this.showQ} category={this.state.categories[1]} questions={this.state.questions[1]} answers={this.state.answers[1]} points={this.state.points[1]}></QCol>
@@ -278,17 +322,43 @@ class Mainasd extends React.Component {
                                         <Button style={{ marginTop: 90 }} className="btn btn-warning" onClick={this.finalJep.bind(this)}>Final Jeopardy</Button>
                                     </Col>
                                 </Row>
-
-                                <Row sm={12}><p>change question  :  row:</p><input id="row" name="row" value={this.state.row} onChange={this.handleChange.bind(this)}></input>
-        column:<input id="column" name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
-        question:<input id="q" name="q" value={this.state.q} onChange={this.handleChange.bind(this)}></input>
-        answer:<input id="a" name="a" value={this.state.a} onChange={this.handleChange.bind(this)}></input>
-                                    <Button onClick={this._onPress} className={'btn btn-primary'}>Send</Button></Row>
-                                <Row sm={12}><p>change category: </p>
-        column:<input name="column" id="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
-        category:<input name="cat" value={this.state.cat} onChange={this.handleChange.bind(this)}></input>
-                                    <Button onClick={this.changeCat.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
-                                    <Row sm={12}><p>final category:</p><input name="finalC" value={this.state.finalC} onChange={this.handleChange.bind(this)}></input><p>final question:</p><input name="finalQ" value={this.state.finalQ} onChange={this.handleChange.bind(this)}></input><p>final answer:</p><input name="finalA" value={this.state.finalA} onChange={this.handleChange.bind(this)}></input><Button onClick={this.changeFinal.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
+                                <Col style={{ margin: 4, textAlign: "center", backgroundColor: "#345b99", borderRadius: 4 }} sm={12}>
+                                    <Row>
+                                        <Col sm={2}>
+                                            <Row><h3>Category</h3></Row>
+                                            <Row><input name="cat" value={this.state.cat} onChange={this.handleChange.bind(this)}></input></Row>
+                                        </Col>
+                                        <Col sm={2}>
+                                            <Row style={{ textAlign: "center" }}><h3 style={{ textAlign: "center" }}>Questions</h3></Row>
+                                            <Row><input placeholder="question 1" name="q1" value={this.state.q1} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="question 2" name="q2" value={this.state.q2} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="question 3" name="q3" value={this.state.q3} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="question 4" name="q4" value={this.state.q4} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="question 5" name="q5" value={this.state.q5} onChange={this.handleChange.bind(this)}></input></Row>
+                                        </Col>
+                                        <Col className="border-right border-black" sm={2}>
+                                            <Row><h3>Answers</h3></Row>
+                                            <Row><input placeholder="answer 1" name="a1" value={this.state.a1} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="answer 2" name="a2" value={this.state.a2} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="answer 3" name="a3" value={this.state.a3} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="answer 4" name="a4" value={this.state.a4} onChange={this.handleChange.bind(this)}></input></Row>
+                                            <Row><input placeholder="answer 5" name="a5" value={this.state.a5} onChange={this.handleChange.bind(this)}></input></Row>
+                                        </Col>
+                                        <Col style={{ margin: 4, textAlign: "center", borderRadius: 4 }} sm={2}>
+                                            <h3>Column</h3>
+                                            <input name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
+                                            <select name="addCategory" onChange={this.handleChange.bind(this)}>
+                                                <option>Select Category</option>
+                                                {this.state.dropList}
+                                            </select>
+                                            <Col className="align-content-center justify-content-center mt-4"><Button className="btn btn-primary" onClick={this.updateCategory.bind(this)}>Update Column</Button></Col>
+                                        </Col>
+                                        <Col className="align-content-center justify-content-center mt-4 border-right border-black" sm={6}><Button onClick={this.addCatToDB.bind(this)} className="btn btn-primary">Add Category</Button></Col>
+                                    </Row>
+                                </Col>
+                                <Row>
+                                    <p>final category:</p><input name="finalC" value={this.state.finalC} onChange={this.handleChange.bind(this)}></input><p>final question:</p><input name="finalQ" value={this.state.finalQ} onChange={this.handleChange.bind(this)}></input><p>final answer:</p><input name="finalA" value={this.state.finalA} onChange={this.handleChange.bind(this)}></input><Button onClick={this.changeFinal.bind(this)} className={'btn btn-primary'}>Change Final Jeopardy</Button>
+                                </Row>
                             </Container>
                 }
             </div>
