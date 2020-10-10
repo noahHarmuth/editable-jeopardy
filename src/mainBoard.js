@@ -1,10 +1,25 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import * as firebase from "firebase/app";
+import "firebase/database"
 import React from 'react';
 import './App.css';
 import { Container, Col, Row, Button } from 'react-bootstrap';
 import QCol from './components/qCol';
 import Qa from './qAScreen';
+import FinalJ from './finalJ'
 const axios = require('axios');
+
+var firebaseConfig = {
+    apiKey: "AIzaSyDZRTy4sdtarEGiJpVkuB4SyZB6YWg8NwY",
+    authDomain: "thursday-jeopardy.firebaseapp.com",
+    databaseURL: "https://thursday-jeopardy.firebaseio.com",
+    projectId: "thursday-jeopardy",
+    storageBucket: "thursday-jeopardy.appspot.com",
+    messagingSenderId: "1095829091044",
+    appId: "1:1095829091044:web:f1aed06c5db5bd371fb2f1"
+};
+// Initialize Firebase
+
 class Mainasd extends React.Component {
 
     constructor(props) {
@@ -13,6 +28,8 @@ class Mainasd extends React.Component {
         this.hideQ.bind(this);
         this._onPress = this._onPress.bind(this);
         this.addPoints = this.addPoints.bind(this);
+        this.updateBoard = this.updateBoard.bind(this);
+        firebase.initializeApp(firebaseConfig);
         this.state = {
             column: 0,
             row: 0,
@@ -140,12 +157,24 @@ class Mainasd extends React.Component {
                 },
 
             },
+            finalJeopardy: {
+                question: "How many episodes of Jeopardy are there?(within 500)",
+                answer: "9200",
+                category: "Jeopardy"
+            },
+            finalC: "",
+            finalQ: "",
+            finalA: "",
+            isFinalJep: false,
             text: "",
             aText: "",
             isSingle: false,
             a: "",
         }
     };
+    componentDidMount = () => {
+        this.updateBoard();
+    }
 
     handleChange({ target }) {
         this.setState({
@@ -153,114 +182,48 @@ class Mainasd extends React.Component {
         });
     }
     _onPress = async () => {
-        axios.get('/questions')
-            .then((response) => {
-                // handle success
-                //console.log(response);
-                if (this.state.column === 0 || this.state.row === 0) {
-                    console.log(response.data);
-                    this.setState({ questions: response.data });
-                } else {
-                    let qs = response.data;
-                    qs[this.state.column][this.state.row] = this.state.q;
-                    this.setState({ questions: qs });
-                    axios.post('/questions', {
-                        questions: this.state.questions
-                    })
-                        .then((response) => {
-                            console.log(response);
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                }
-
-            })
-            .catch((error) => {
-                // handle error
-                console.log(error);
-            })
-            .then(() => {
-                // always executed
-            });
-        //handle answer updats
-        axios.get('/answers')
-            .then((response) => {
-                // handle success
-                //console.log(response);
-                if (this.state.column === 0 || this.state.row === 0) {
-                    console.log(response.data);
-                    this.setState({ answers: response.data });
-                } else {
-                    let aq = response.data;
-                    aq[this.state.column][this.state.row] = this.state.a;
-                    this.setState({ answers: aq });
-                    axios.post('/answers', {
-                        answers: this.state.answers
-                    })
-                        .then((response) => {
-                            console.log(response);
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                }
-
-            })
-            .catch((error) => {
-                // handle error
-                console.log(error);
-            })
-            .then(() => {
-                // always executed
-            });
-        // let qs = this.state.questions;
-        // let aS = this.state.answers;
-        // console.log(qs);
-        // aS[this.state.column][this.state.row] = this.state.a;
-        // qs[this.state.column][this.state.row] = this.state.q;
-        // this.setState({ answers: aS, questions: qs });
-        // //this.setState({isFilled: !this.state.isFilled});
-        // console.log();
+        let qs = this.state.questions;
+        qs[this.state.column][this.state.row] = this.state.q;
+        this.setState({ questions: qs });
+        firebase.database().ref("questions").set({
+            questions: this.state.questions
+        })
+        let aq = this.state.answers;
+        aq[this.state.column][this.state.row] = this.state.a;
+        this.setState({ answers: aq });
+        firebase.database().ref("answers").set({
+            answers: this.state.answers
+        })
     }
     changeCat = () => {
-        axios.get('/categories')
-            .then((response) => {
-                // handle success
-                //console.log(response);
-                if (this.state.column === 0) {
-                    console.log(response.data);
-                    this.setState({ categories: response.data });
-                } else {
-                    let aq = response.data;
-                    aq[this.state.column] = this.state.cat;
-                    this.setState({ categories: aq });
-                    axios.post('/categories', {
-                        categories: this.state.categories
-                    })
-                        .then((response) => {
-                            console.log(response);
-                        })
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                }
-
-            })
-            .catch((error) => {
-                // handle error
-                console.log(error);
-            })
-            .then(() => {
-                // always executed
-            });
-
-        // let qs = this.state.categories;
-        // qs[this.state.column] = this.state.cat;
-        // this.setState({
-        //     categories: qs,
-        // })
+        let aq = this.state.categories;
+        aq[this.state.column] = this.state.cat;
+        this.setState({ categories: aq });
+        firebase.database().ref("categories").set({
+            categories: this.state.categories
+        })
     }
+    changeFinal = () => {
+        let aq = this.state.finalJeopardy;
+
+        aq.question = this.state.finalQ;
+        aq.answer = this.state.finalA;
+        aq.category = this.state.finalC;
+        this.setState({ finalJeopardy: aq });
+        firebase.database().ref("finalJeopardy").set({
+            finalJeopardy: this.state.finalJeopardy
+        })
+    }
+    updateBoard = () => {
+        let ref = firebase.database().ref("/");
+        ref.on("value", snapshot => {
+            console.log(snapshot.val())
+            console.log(snapshot.val().questions.questions)
+            this.setState({ questions: snapshot.val().questions.questions, answers: snapshot.val().answers.answers, categories: snapshot.val().categories.categories, finalJeopardy: snapshot.val().finalJeopardy.finalJeopardy })
+        });
+
+    }
+
     showQ = (blah, beck, r, c) => {
         let qs = this.state.points;
         qs[c][r] = "";
@@ -268,7 +231,10 @@ class Mainasd extends React.Component {
         this.setState({ aText: beck, text: blah, isSingle: true });
     }
     hideQ = () => {
-        this.setState({ text: "", isSingle: false });
+        this.setState({ text: "", isSingle: false, isFinalJep: false });
+    }
+    finalJep = () => {
+        this.setState({ isFinalJep: true });
     }
     addPoints = () => {
         let x = this.state.t1;
@@ -280,44 +246,50 @@ class Mainasd extends React.Component {
         return (
             <div className="App">
                 {
-                    this.state.isSingle ?
-                        <Qa hideQ={this.hideQ} qText={this.state.text} aText={this.state.aText}></Qa>
+
+                    this.state.isFinalJep ?
+                        <FinalJ hideQ={this.hideQ} qText={this.state.finalJeopardy.question} aText={this.state.finalJeopardy.answer} catText={this.state.finalJeopardy.category}></FinalJ>
                         :
+                        this.state.isSingle ?
+                            <Qa hideQ={this.hideQ} qText={this.state.text} aText={this.state.aText}></Qa>
 
-                        <Container fluid>
-                            <Row sm={12} style={{ borderWidth: 2 }}>
-                                <QCol c={1} showQ={this.showQ} category={this.state.categories[1]} questions={this.state.questions[1]} answers={this.state.answers[1]} points={this.state.points[1]}></QCol>
-                                <QCol c={2} showQ={this.showQ} category={this.state.categories[2]} questions={this.state.questions[2]} answers={this.state.answers[2]} points={this.state.points[2]}></QCol>
-                                <QCol c={3} showQ={this.showQ} category={this.state.categories[3]} questions={this.state.questions[3]} answers={this.state.answers[3]} points={this.state.points[3]}></QCol>
-                                <QCol c={4} showQ={this.showQ} category={this.state.categories[4]} questions={this.state.questions[4]} answers={this.state.answers[4]} points={this.state.points[4]}></QCol>
-                                <QCol c={5} showQ={this.showQ} category={this.state.categories[5]} questions={this.state.questions[5]} answers={this.state.answers[5]} points={this.state.points[5]}></QCol>
-                                <Col sm={2}>
-                                    <h1>Team 1</h1>
-                                    <h3>{this.state.t1}</h3>
-                                    <Row className="justify-content-center">
-                                        <Button onClick={() => { let x = this.state.t1; this.setState({ t1: x - 100 }) }} className="btn btn-danger pad1">Subtract</Button>
-                                        <Button onClick={() => { let x = this.state.t1; this.setState({ t1: x + 100 }) }} className="btn btn-success pad1">Add Points</Button>
-                                    </Row>
-                                    <h1>Team 2</h1>
-                                    <h3>{this.state.t2}</h3>
-                                    <Row className="justify-content-center">
-                                        <Button onClick={() => { let x = this.state.t2; this.setState({ t2: x - 100 }) }} className="btn btn-danger pad1">Subtract</Button>
-                                        <Button onClick={() => { let x = this.state.t2; this.setState({ t2: x + 100 }) }} className="btn btn-success pad1">Add Points</Button>
-                                    </Row>
-                                    <Button style={{marginTop: 90}} className="btn btn-warning">Final Jeopardy</Button>
-                                </Col>
-                            </Row>
+                            :
 
-                            <Row sm={12}><p>change question  :  row:</p><input id="row" name="row" value={this.state.row} onChange={this.handleChange.bind(this)}></input>
+                            <Container fluid>
+                                <Row sm={12} style={{ borderWidth: 2 }}>
+                                    <QCol c={1} showQ={this.showQ} category={this.state.categories[1]} questions={this.state.questions[1]} answers={this.state.answers[1]} points={this.state.points[1]}></QCol>
+                                    <QCol c={2} showQ={this.showQ} category={this.state.categories[2]} questions={this.state.questions[2]} answers={this.state.answers[2]} points={this.state.points[2]}></QCol>
+                                    <QCol c={3} showQ={this.showQ} category={this.state.categories[3]} questions={this.state.questions[3]} answers={this.state.answers[3]} points={this.state.points[3]}></QCol>
+                                    <QCol c={4} showQ={this.showQ} category={this.state.categories[4]} questions={this.state.questions[4]} answers={this.state.answers[4]} points={this.state.points[4]}></QCol>
+                                    <QCol c={5} showQ={this.showQ} category={this.state.categories[5]} questions={this.state.questions[5]} answers={this.state.answers[5]} points={this.state.points[5]}></QCol>
+                                    <Col sm={2}>
+                                        <h1>Team 1</h1>
+                                        <h3>{this.state.t1}</h3>
+                                        <Row className="justify-content-center">
+                                            <Button onClick={() => { let x = this.state.t1; this.setState({ t1: x - 100 }) }} className="btn btn-danger pad1">Subtract</Button>
+                                            <Button onClick={() => { let x = this.state.t1; this.setState({ t1: x + 100 }) }} className="btn btn-success pad1">Add Points</Button>
+                                        </Row>
+                                        <h1>Team 2</h1>
+                                        <h3>{this.state.t2}</h3>
+                                        <Row className="justify-content-center">
+                                            <Button onClick={() => { let x = this.state.t2; this.setState({ t2: x - 100 }) }} className="btn btn-danger pad1">Subtract</Button>
+                                            <Button onClick={() => { let x = this.state.t2; this.setState({ t2: x + 100 }) }} className="btn btn-success pad1">Add Points</Button>
+                                        </Row>
+                                        <Button style={{ marginTop: 90 }} className="btn btn-warning" onClick={this.finalJep.bind(this)}>Final Jeopardy</Button>
+                                    </Col>
+                                </Row>
+
+                                <Row sm={12}><p>change question  :  row:</p><input id="row" name="row" value={this.state.row} onChange={this.handleChange.bind(this)}></input>
         column:<input id="column" name="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
         question:<input id="q" name="q" value={this.state.q} onChange={this.handleChange.bind(this)}></input>
         answer:<input id="a" name="a" value={this.state.a} onChange={this.handleChange.bind(this)}></input>
-                                <Button onClick={this._onPress} className={'btn btn-primary'}>Send</Button></Row>
-                            <Row sm={12}><p>change category: </p>
+                                    <Button onClick={this._onPress} className={'btn btn-primary'}>Send</Button></Row>
+                                <Row sm={12}><p>change category: </p>
         column:<input name="column" id="column" value={this.state.column} onChange={this.handleChange.bind(this)}></input>
         category:<input name="cat" value={this.state.cat} onChange={this.handleChange.bind(this)}></input>
-                                <Button onClick={this.changeCat.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
-                        </Container>
+                                    <Button onClick={this.changeCat.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
+                                    <Row sm={12}><p>final category:</p><input name="finalC" value={this.state.finalC} onChange={this.handleChange.bind(this)}></input><p>final question:</p><input name="finalQ" value={this.state.finalQ} onChange={this.handleChange.bind(this)}></input><p>final answer:</p><input name="finalA" value={this.state.finalA} onChange={this.handleChange.bind(this)}></input><Button onClick={this.changeFinal.bind(this)} className={'btn btn-primary'}>Send</Button></Row>
+                            </Container>
                 }
             </div>
         );
